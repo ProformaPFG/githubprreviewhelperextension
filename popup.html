@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>GitHub Code Review Assistant</title>
+  <style>
+    body {
+      width: 300px;
+      padding: 15px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #fff;
+    }
+    h1 {
+      font-size: 16px;
+      margin: 0 0 10px 0;
+      color: #24292e;
+    }
+    p {
+      font-size: 13px;
+      color: #586069;
+      margin: 0 0 10px 0;
+      line-height: 1.5;
+    }
+    .status {
+      padding: 10px;
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      border-radius: 4px;
+      color: #155724;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+    button {
+      width: 100%;
+      padding: 8px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    button:hover {
+      background: #218838;
+    }
+  </style>
+</head>
+<body>
+  <h1>📊 Code Review Assistant</h1>
+  <div class="status">✅ Active on GitHub PR pages</div>
+  <p>This extension analyzes code on GitHub pull requests and detects security and quality issues.</p>
+  <button onclick="openOptions()">⚙️ Settings</button>
+  <script>
+    function openOptions() {
+      chrome.runtime.openOptionsPage();
+    }
+  </script>
+</body>
+</html>
