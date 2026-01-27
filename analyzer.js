@@ -8,37 +8,34 @@
  * - Result deduplication and aggregation
  */
 
-import type { Rule, Language, AnalysisResult, FileAnalysisResults } from './types';
-
 /**
  * Calculate the line number where a match occurred
- * @param code Full code string
- * @param matchPosition Position of match in string (from regex)
- * @returns Line number (1-indexed)
+ * @param {string} code Full code string
+ * @param {number} matchPosition Position of match in string
+ * @returns {number} Line number (1-indexed)
  */
-export function calculateLineNumber(code: string, matchPosition: number): number {
-  // Count newlines up to match position
+function calculateLineNumber(code, matchPosition) {
   const lineCount = code.substring(0, matchPosition).split('\n').length;
   return lineCount;
 }
 
 /**
  * Extract the matched text from code
- * @param code Full code string
- * @param match RegExp match result
- * @returns The matched text
+ * @param {string} code Full code string
+ * @param {RegExpExecArray} match RegExp match result
+ * @returns {string} The matched text
  */
-export function extractMatchedText(code: string, match: RegExpExecArray): string {
+function extractMatchedText(code, match) {
   return match[0];
 }
 
 /**
- * Get column position of match (position on the line)
- * @param code Full code string
- * @param matchPosition Position in string
- * @returns Column number (0-indexed)
+ * Get column position of match
+ * @param {string} code Full code string
+ * @param {number} matchPosition Position in string
+ * @returns {number} Column number (0-indexed)
  */
-export function getColumnNumber(code: string, matchPosition: number): number {
+function getColumnNumber(code, matchPosition) {
   const lastNewline = code.lastIndexOf('\n', matchPosition);
   const column = matchPosition - (lastNewline + 1);
   return column;
@@ -46,33 +43,26 @@ export function getColumnNumber(code: string, matchPosition: number): number {
 
 /**
  * Execute a single rule against code
- * @param code Code to analyze
- * @param rule Rule to execute
- * @param filePath Path of the file being analyzed
- * @returns Array of analysis results
+ * @param {string} code Code to analyze
+ * @param {Object} rule Rule to execute
+ * @param {string} filePath Path of the file
+ * @returns {Array} Array of analysis results
  */
-export function executeRule(
-  code: string,
-  rule: Rule,
-  filePath: string
-): AnalysisResult[] {
-  const results: AnalysisResult[] = [];
-  
-  if (!rule.enabled) {
-    return results;
-  }
+function executeRule(code, rule, filePath) {
+  const results = [];
   
   try {
-    // Build regex from pattern and flags
+    if (!rule.enabled) {
+      return results;
+    }
+    
     const flags = rule.patternFlags || 'gi';
     const regex = new RegExp(rule.pattern, flags);
+    let match;
     
-    let match: RegExpExecArray | null;
-    
-    // Execute pattern matching
     while ((match = regex.exec(code)) !== null) {
       const lineNumber = calculateLineNumber(code, match.index);
-      const column = getColumnNumber(code, match.index);
+      const columnNumber = getColumnNumber(code, match.index);
       const matchedText = extractMatchedText(code, match);
       
       results.push({
@@ -81,15 +71,14 @@ export function executeRule(
         message: rule.message,
         remediation: rule.remediation,
         severity: rule.severity,
-        lineNumber,
-        column,
-        code: matchedText,
         category: rule.category,
+        lineNumber: lineNumber,
+        columnNumber: columnNumber,
+        matchedText: matchedText,
       });
     }
   } catch (error) {
     console.error(`Error executing rule ${rule.id}:`, error);
-    // Don't throw - continue with other rules
   }
   
   return results;
@@ -97,181 +86,67 @@ export function executeRule(
 
 /**
  * Deduplicate results by ruleId and line number
- * Keeps the first occurrence of each duplicate
+ * @param {Array} results Array of results to deduplicate
+ * @returns {Array} Deduplicated results
  */
-export function deduplicateResults(results: AnalysisResult[]): AnalysisResult[] {
-  const seen = new Set<string>();
-  const deduplicated: AnalysisResult[] = [];
+function deduplicateResults(results) {
+  const seen = new Set();
+  const deduped = [];
   
-  for (const result of results) {
-    // Create unique key from ruleId and lineNumber
+  results.forEach(result => {
     const key = `${result.ruleId}:${result.lineNumber}`;
-    
     if (!seen.has(key)) {
       seen.add(key);
-      deduplicated.push(result);
+      deduped.push(result);
     }
-  }
-  
-  return deduplicated;
-}
-
-/**
- * Sort results by severity and line number
- * Severity order: critical > warning > info
- */
-export function sortResults(results: AnalysisResult[]): AnalysisResult[] {
-  const severityOrder = { critical: 0, warning: 1, info: 2 };
-  
-  return results.sort((a, b) => {
-    // First by severity
-    const severityDiff = severityOrder[a.severity] - severityOrder[b.severity];
-    if (severityDiff !== 0) return severityDiff;
-    
-    // Then by line number
-    return a.lineNumber - b.lineNumber;
   });
+  
+  return deduped;
 }
 
 /**
- * Analyze code against a set of rules
- * @param code Code to analyze
- * @param language Language type for filtering rules
- * @param rules Array of rules to check
- * @param filePath Path of file being analyzed (for results)
- * @returns File analysis results
+ * Analyze code against rules
+ * @param {string} code Code to analyze
+ * @param {string} language Programming language
+ * @param {Array} rules Rules to apply
+ * @param {string} filePath File path
+ * @returns {Object} Analysis results
  */
-export function analyzeCode(
-  code: string,
-  language: Language,
-  rules: Rule[],
-  filePath: string = ''
-): FileAnalysisResults {
-  // Filter rules that apply to this language
-  const applicableRules = rules.filter(rule => rule.languages.includes(language));
+function analyzeCode(code, language, rules, filePath) {
+  const allResults = [];
   
-  // Execute all rules
-  let allResults: AnalysisResult[] = [];
-  for (const rule of applicableRules) {
+  // Filter rules for this language
+  const applicableRules = rules.filter(rule => 
+    rule.languages.includes(language) && rule.enabled
+  );
+  
+  // Execute each rule
+  applicableRules.forEach(rule => {
     const ruleResults = executeRule(code, rule, filePath);
-    allResults = allResults.concat(ruleResults);
-  }
+    allResults.push(...ruleResults);
+  });
   
-  // Deduplicate and sort results
-  const deduplicated = deduplicateResults(allResults);
-  const sorted = sortResults(deduplicated);
+  // Deduplicate results
+  const deduplicatedResults = deduplicateResults(allResults);
+  
+  // Sort by line number
+  deduplicatedResults.sort((a, b) => a.lineNumber - b.lineNumber);
   
   return {
-    filePath,
-    language,
-    results: sorted,
+    filePath: filePath,
+    language: language,
+    results: deduplicatedResults,
   };
 }
 
-/**
- * Analyze multiple files
- * @param files Array of files with code and language
- * @param rules Array of rules to apply
- * @returns Summary of all analysis results
- */
-export interface FileToAnalyze {
-  filePath: string;
-  language: Language;
-  code: string;
-}
-
-export function analyzeFiles(
-  files: FileToAnalyze[],
-  rules: Rule[]
-): FileAnalysisResults[] {
-  return files.map(file =>
-    analyzeCode(file.code, file.language, rules, file.filePath)
-  );
-}
-
-/**
- * Get statistics about analysis results
- */
-export interface AnalysisStats {
-  totalFiles: number;
-  totalIssues: number;
-  criticalCount: number;
-  warningCount: number;
-  infoCount: number;
-  affectedFiles: number;
-  byCategory: Record<string, number>;
-}
-
-export function getAnalysisStats(results: FileAnalysisResults[]): AnalysisStats {
-  const stats: AnalysisStats = {
-    totalFiles: results.length,
-    totalIssues: 0,
-    criticalCount: 0,
-    warningCount: 0,
-    infoCount: 0,
-    affectedFiles: 0,
-    byCategory: {},
+// Export functions
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    analyzeCode,
+    executeRule,
+    calculateLineNumber,
+    extractMatchedText,
+    getColumnNumber,
+    deduplicateResults,
   };
-  
-  const filesWithIssues = new Set<string>();
-  
-  for (const fileResult of results) {
-    for (const issue of fileResult.results) {
-      stats.totalIssues++;
-      filesWithIssues.add(fileResult.filePath);
-      
-      switch (issue.severity) {
-        case 'critical':
-          stats.criticalCount++;
-          break;
-        case 'warning':
-          stats.warningCount++;
-          break;
-        case 'info':
-          stats.infoCount++;
-          break;
-      }
-      
-      // Count by category
-      stats.byCategory[issue.category] = (stats.byCategory[issue.category] || 0) + 1;
-    }
-  }
-  
-  stats.affectedFiles = filesWithIssues.size;
-  
-  return stats;
-}
-
-/**
- * Filter results by severity level
- * Returns issues at or above the specified severity
- */
-export function filterBySeverity(
-  results: AnalysisResult[],
-  minSeverity: 'info' | 'warning' | 'critical'
-): AnalysisResult[] {
-  const severityOrder = { info: 2, warning: 1, critical: 0 };
-  const minLevel = severityOrder[minSeverity];
-  
-  return results.filter(result => severityOrder[result.severity] <= minLevel);
-}
-
-/**
- * Filter results by category
- */
-export function filterByCategory(
-  results: AnalysisResult[],
-  category: string
-): AnalysisResult[] {
-  return results.filter(result => result.category === category);
-}
-
-/**
- * Filter results by rule ID
- */
-export function filterByRuleId(
-  results: AnalysisResult[],
-  ruleId: string
-): AnalysisResult[] {
-  return results.filter(result => result.ruleId === ruleId);
 }

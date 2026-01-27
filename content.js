@@ -4,17 +4,10 @@
  * Responsible for: DOM observation, code extraction, UI injection
  */
 
-import {
-  isGitHubPRFilesPage,
-  extractAllCodeFromPage,
-  getPRUrl,
-} from './utils/dom';
-import type { ExtractedCode, ExtensionMessage } from './types';
-
 /**
  * Send message to service worker and wait for response
  */
-function sendMessageToBackground<T>(message: ExtensionMessage): Promise<T> {
+function sendMessageToBackground(message) {
   return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage(message, (response) => {
       if (chrome.runtime.lastError) {
@@ -27,15 +20,106 @@ function sendMessageToBackground<T>(message: ExtensionMessage): Promise<T> {
         return;
       }
       
-      resolve(response.data as T);
+      resolve(response.data);
     });
   });
 }
 
 /**
+ * Check if we're on a GitHub PR files page
+ */
+function isGitHubPRFilesPage() {
+  const url = window.location.href;
+  return /github\.com\/.*\/.*\/pull\/\d+\/(files|changes)/.test(url);
+}
+
+/**
+ * Extract code from all visible diffs on the page
+ */
+function extractAllCodeFromPage() {
+  const files = [];
+  
+  try {
+    // Find all file containers
+    const fileElements = document.querySelectorAll('[data-path]');
+    
+    fileElements.forEach(fileElement => {
+      const filePath = fileElement.getAttribute('data-path');
+      if (!filePath) return;
+      
+      // Extract file language from extension
+      const ext = filePath.split('.').pop().toLowerCase();
+      const language = getLanguageFromExtension(ext);
+      
+      // Extract code lines
+      const lines = [];
+      const tableBody = fileElement.querySelector('tbody');
+      
+      if (tableBody) {
+        const rows = tableBody.querySelectorAll('tr');
+        rows.forEach((row, index) => {
+          const codeCell = row.querySelector('[data-code-cell]') || row.querySelector('td:last-child');
+          if (codeCell) {
+            const content = codeCell.textContent || '';
+            const isDiffAdded = row.classList.contains('addition') || row.classList.contains('add');
+            const isDiffRemoved = row.classList.contains('deletion') || row.classList.contains('remove');
+            
+            lines.push({
+              lineNumber: index + 1,
+              content: content,
+              isDiffAdded: isDiffAdded,
+              isDiffRemoved: isDiffRemoved,
+            });
+          }
+        });
+      }
+      
+      if (lines.length > 0) {
+        files.push({
+          filePath: filePath,
+          language: language,
+          lines: lines,
+        });
+      }
+    });
+  } catch (error) {
+    console.error('Error extracting code from page:', error);
+  }
+  
+  return files;
+}
+
+/**
+ * Get language from file extension
+ */
+function getLanguageFromExtension(ext) {
+  const extensionMap = {
+    'js': 'javascript',
+    'jsx': 'jsx',
+    'ts': 'typescript',
+    'tsx': 'tsx',
+    'html': 'html',
+    'htm': 'html',
+    'css': 'css',
+    'scss': 'css',
+    'sass': 'css',
+    'less': 'css',
+    'cs': 'csharp',
+    'java': 'java',
+    'py': 'python',
+    'rb': 'ruby',
+    'php': 'php',
+    'go': 'go',
+    'rs': 'rust',
+  };
+  
+  return extensionMap[ext] || 'text';
+}
+
+/**
  * Extract and analyze code on page
  */
-async function analyzePageCode(): Promise<void> {
+async function analyzePageCode() {
   try {
     if (!isGitHubPRFilesPage()) {
       console.log('Not on a GitHub PR files page');
@@ -43,11 +127,10 @@ async function analyzePageCode(): Promise<void> {
     }
     
     // Extract code from all visible diffs
-    const extractedFiles: ExtractedCode[] = extractAllCodeFromPage();
+    const extractedFiles = extractAllCodeFromPage();
     console.log(`Extracted ${extractedFiles.length} files from page`, extractedFiles);
     
-    // For Phase 1, we just log the extracted code
-    // The actual analysis will happen in Phase 2
+    // Log extracted code for debugging
     extractedFiles.forEach(file => {
       console.log(`File: ${file.filePath} (${file.language})`);
       console.log(`  Lines: ${file.lines.length}`);
@@ -71,7 +154,7 @@ async function analyzePageCode(): Promise<void> {
 /**
  * Add a debug marker to the page to show extension is active
  */
-function addDebugMarker(): void {
+function addDebugMarker() {
   const existingMarker = document.getElementById('gcra-debug-marker');
   if (existingMarker) return;
   
@@ -97,7 +180,7 @@ function addDebugMarker(): void {
 /**
  * Watch for page changes and re-analyze when needed
  */
-function setupPageObserver(): void {
+function setupPageObserver() {
   // GitHub uses dynamic loading for diffs, so we need to observe DOM changes
   const observer = new MutationObserver((mutations) => {
     // Check if diff content was added
@@ -131,8 +214,8 @@ function setupPageObserver(): void {
 /**
  * Listen for messages from popup or background
  */
-function setupMessageListener(): void {
-  chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendResponse) => {
+function setupMessageListener() {
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === 'analyze') {
       // Trigger analysis from popup
       analyzePageCode()
@@ -148,7 +231,7 @@ function setupMessageListener(): void {
 /**
  * Initialize content script
  */
-function initialize(): void {
+function initialize() {
   console.log('GitHub Code Review Assistant content script loaded');
   
   if (!isGitHubPRFilesPage()) {

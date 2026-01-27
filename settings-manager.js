@@ -9,7 +9,7 @@
  * - UI preferences
  */
 
-import type { Rule } from './types';
+// Types imported implicitly
 
 /**
  * Settings interface

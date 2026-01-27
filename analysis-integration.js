@@ -11,7 +11,7 @@
 import { analyze as analyzeCode } from './analyzer';
 import { getAllRules } from './rules';
 import { settingsManager, type ExtensionSettings } from './settings-manager';
-import type { FileAnalysisResults } from './types';
+// Types imported implicitly
 
 /**
  * Run analysis with settings applied

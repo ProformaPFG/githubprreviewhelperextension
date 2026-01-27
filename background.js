@@ -3,23 +3,14 @@
  * Handles message routing and state management
  */
 
-import type {
-  ExtensionMessage,
-  AnalyzeMessage,
-  FileAnalysisResults,
-  ExtensionSettings,
-  Rule,
-  Language,
-} from './types';
-
 // Global state
-let cachedRules: Map<Language, Rule[]> = new Map();
-let cachedSettings: ExtensionSettings | null = null;
+let cachedRules = new Map();
+let cachedSettings = null;
 
 /**
  * Initialize default settings
  */
-async function initializeSettings(): Promise<ExtensionSettings> {
+async function initializeSettings() {
   const result = await chrome.storage.local.get('settings');
   
   if (result.settings) {
@@ -27,7 +18,7 @@ async function initializeSettings(): Promise<ExtensionSettings> {
     return result.settings;
   }
   
-  const defaultSettings: ExtensionSettings = {
+  const defaultSettings = {
     enabledRuleIds: [],
     customRules: [],
     githubEnterpriseUrls: [],
@@ -42,7 +33,7 @@ async function initializeSettings(): Promise<ExtensionSettings> {
 /**
  * Get current settings
  */
-async function getSettings(): Promise<ExtensionSettings> {
+async function getSettings() {
   if (cachedSettings) return cachedSettings;
   return initializeSettings();
 }
@@ -50,7 +41,7 @@ async function getSettings(): Promise<ExtensionSettings> {
 /**
  * Update settings
  */
-async function updateSettings(settings: Partial<ExtensionSettings>): Promise<ExtensionSettings> {
+async function updateSettings(settings) {
   const current = await getSettings();
   const updated = { ...current, ...settings };
   await chrome.storage.local.set({ settings: updated });
@@ -59,16 +50,14 @@ async function updateSettings(settings: Partial<ExtensionSettings>): Promise<Ext
 }
 
 /**
- * Get rules for a specific language (empty for now, will be populated in Phase 2)
+ * Get rules for a specific language
  */
-async function getRulesForLanguage(language: Language): Promise<Rule[]> {
+async function getRulesForLanguage(language) {
   if (cachedRules.has(language)) {
     return cachedRules.get(language) || [];
   }
   
-  // For Phase 1, return empty array
-  // This will be populated with actual rules in Phase 2
-  const rules: Rule[] = [];
+  const rules = [];
   cachedRules.set(language, rules);
   return rules;
 }
@@ -76,12 +65,12 @@ async function getRulesForLanguage(language: Language): Promise<Rule[]> {
 /**
  * Get all enabled rules
  */
-async function getEnabledRules(): Promise<Rule[]> {
+async function getEnabledRules() {
   const settings = await getSettings();
   
   // Collect all rules from all languages
-  const languages: Language[] = ['html', 'css', 'javascript', 'typescript', 'jsx', 'tsx', 'csharp'];
-  const allRules: Rule[] = [];
+  const languages = ['html', 'css', 'javascript', 'typescript', 'jsx', 'tsx', 'csharp'];
+  const allRules = [];
   
   for (const lang of languages) {
     const rules = await getRulesForLanguage(lang);
@@ -96,17 +85,13 @@ async function getEnabledRules(): Promise<Rule[]> {
 }
 
 /**
- * Analyze code against rules (Phase 2+)
+ * Analyze code against rules
  */
-async function analyzeCodeImpl(
-  code: string,
-  language: Language,
-  filePath: string
-): Promise<FileAnalysisResults | null> {
+async function analyzeCodeImpl(code, language, filePath) {
   try {
-    // Dynamically import analyzer and rules to avoid circular dependencies
-    const { analyzeCode: analyze } = await import('./analyzer');
-    const { getAllRules } = await import('./rules/index');
+    // Dynamically import analyzer and rules
+    const { analyzeCode: analyze } = await import('./analyzer.js');
+    const { getAllRules } = await import('./rules/index.js');
     
     const rules = getAllRules();
     const results = analyze(code, language, rules, filePath);
@@ -125,14 +110,13 @@ async function analyzeCodeImpl(
 /**
  * Handle messages from content script and popup
  */
-chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'analyze') {
-    const analyzeMsg = message as AnalyzeMessage;
-    analyzeCodeImpl(
-      analyzeMsg.payload?.code as string || '',
-      analyzeMsg.payload?.language as Language || 'javascript',
-      analyzeMsg.payload?.filePath as string || ''
-    )
+    const code = message.payload?.code || '';
+    const language = message.payload?.language || 'javascript';
+    const filePath = message.payload?.filePath || '';
+    
+    analyzeCodeImpl(code, language, filePath)
       .then(results => sendResponse({ success: true, data: results }))
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true;
@@ -146,7 +130,7 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
   }
   
   if (message.type === 'updateSettings') {
-    const payload = message.payload as { settings: Partial<ExtensionSettings> };
+    const payload = message.payload;
     updateSettings(payload.settings)
       .then(settings => sendResponse({ success: true, data: settings }))
       .catch(error => sendResponse({ success: false, error: error.message }));
