@@ -4,7 +4,7 @@
  * Rules for detecting common JavaScript security vulnerabilities
  */
 
-import type { Rule } from '../types';
+import type { Rule } from '../types.js';
 
 export const jsSecurityRules: Rule[] = [
   {

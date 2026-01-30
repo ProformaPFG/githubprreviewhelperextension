@@ -1,6 +1,6 @@
 /**
  * Settings Manager - Handles all user preferences and settings
- * 
+ *
  * Manages:
  * - Enabled/disabled rules
  * - Custom rules
@@ -9,7 +9,7 @@
  * - UI preferences
  */
 
-// Types imported implicitly
+import type { Rule } from './types.js';
 
 /**
  * Settings interface
@@ -358,8 +358,8 @@ export class SettingsManager {
    * Listen for settings changes
    */
   onChange(callback: (settings: ExtensionSettings) => void): void {
-    chrome.storage.local.onChanged.addListener((changes, areaName) => {
-      if (areaName === 'local' && changes[this.storageKey]) {
+    chrome.storage.local.onChanged.addListener((changes: { [key: string]: chrome.storage.StorageChange }) => {
+      if (changes[this.storageKey]) {
         const newSettings = changes[this.storageKey].newValue;
         if (newSettings) {
           this.cache = newSettings;

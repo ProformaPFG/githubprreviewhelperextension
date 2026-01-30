@@ -4,16 +4,16 @@
  * Exports all available rules organized by language and category
  */
 
-import type { Rule, Language } from '../types';
-import { getHTMLSecurityRules } from './html-security';
-import { getHTMLSecurityExtendedRules } from './html-security-extended';
-import { getCSSSecurityRules } from './css-security';
-import { getJavaScriptSecurityRules } from './javascript-security';
-import { getJavaScriptSecurityExtendedRules } from './javascript-security-extended';
-import { getJavaScriptDebugRules } from './javascript-debug';
-import { getJavaScriptDebugExtendedRules } from './javascript-debug-extended';
-import { getCSharpSecurityRules } from './csharp-security';
-import { getCSharpDebugRules } from './csharp-debug';
+import type { Rule, Language } from '../types.js';
+import { getHTMLSecurityRules } from './html-security.js';
+import { getHTMLSecurityExtendedRules } from './html-security-extended.js';
+import { getCSSSecurityRules } from './css-security.js';
+import { getJavaScriptSecurityRules } from './javascript-security.js';
+import { getJavaScriptSecurityExtendedRules } from './javascript-security-extended.js';
+import { getJavaScriptDebugRules } from './javascript-debug.js';
+import { getJavaScriptDebugExtendedRules } from './javascript-debug-extended.js';
+import { getCSharpSecurityRules } from './csharp-security.js';
+import { getCSharpDebugRules } from './csharp-debug.js';
 
 /**
  * Get all available rules

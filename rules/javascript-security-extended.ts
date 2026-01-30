@@ -4,7 +4,7 @@
  * Rules JS-SEC-004 through JS-SEC-018
  */
 
-import type { Rule } from '../types';
+import type { Rule } from '../types.js';
 
 export const jsSecurityExtendedRules: Rule[] = [
   {

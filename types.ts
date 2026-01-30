@@ -23,6 +23,10 @@ export interface Rule {
   message: string;
   remediation?: string;
   enabled: boolean;
+  examples?: {
+    bad: string;
+    good: string;
+  };
 }
 
 /**
@@ -41,12 +45,25 @@ export interface AnalysisResult {
 }
 
 /**
+ * Analysis statistics
+ */
+export interface AnalysisStats {
+  total: number;
+  critical: number;
+  warning: number;
+  info: number;
+  byCategory: Record<string, number>;
+  byRuleId: Record<string, number>;
+}
+
+/**
  * Represents all analysis results for a file
  */
 export interface FileAnalysisResults {
   filePath: string;
   language: Language;
   results: AnalysisResult[];
+  stats?: AnalysisStats;
 }
 
 /**

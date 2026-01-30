@@ -4,7 +4,7 @@
  * Rules for detecting CSS-based vulnerabilities
  */
 
-import type { Rule } from '../types';
+import type { Rule } from '../types.js';
 
 export const cssSecurityRules: Rule[] = [
   {

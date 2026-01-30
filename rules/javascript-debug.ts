@@ -4,7 +4,7 @@
  * Rules for detecting debug statements left in production code
  */
 
-import type { Rule } from '../types';
+import type { Rule } from '../types.js';
 
 export const jsDebugRules: Rule[] = [
   {

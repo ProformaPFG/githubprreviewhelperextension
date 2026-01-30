@@ -9,8 +9,8 @@
  * - Export as markdown
  */
 
-import type { FileAnalysisResults, AnalysisResult } from '../types';
-import { inlineAnnotator } from './inline-annotator';
+import type { FileAnalysisResults, AnalysisResult } from '../types.js';
+import { inlineAnnotator } from './inline-annotator.js';
 
 /**
  * Summary Panel class

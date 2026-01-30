@@ -5,7 +5,7 @@
  * Covers SQL injection, command injection, deserialization, cryptography, etc.
  */
 
-import type { Rule } from '../types';
+import type { Rule } from '../types.js';
 
 export const csharpSecurityRules: Rule[] = [
   {

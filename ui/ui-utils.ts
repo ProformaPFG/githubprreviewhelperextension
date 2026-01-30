@@ -4,10 +4,10 @@
  * Orchestrates all UI components working together
  */
 
-import type { FileAnalysisResults } from '../types';
-import { inlineAnnotator } from './inline-annotator';
-import { summaryPanel } from './summary-panel';
-import { tooltipManager } from './tooltip';
+import type { FileAnalysisResults } from '../types.js';
+import { inlineAnnotator } from './inline-annotator.js';
+import { summaryPanel } from './summary-panel.js';
+import { tooltipManager } from './tooltip.js';
 
 /**
  * UI System - Manages all UI components

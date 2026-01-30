@@ -6,7 +6,7 @@
  * HTML-SEC-008: SVG Script Injection
  */
 
-import type { Rule } from '../types';
+import type { Rule } from '../types.js';
 
 export const htmlSecurityExtendedRules: Rule[] = [
   {

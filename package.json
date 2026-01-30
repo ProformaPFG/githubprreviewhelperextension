@@ -1,0 +1,21 @@
+{
+  "name": "github-code-review-assistant",
+  "version": "1.0.0",
+  "description": "Automated code analysis for GitHub PRs. Detects security and quality issues.",
+  "type": "module",
+  "scripts": {
+    "build": "npm run clean && npm run compile && npm run copy-assets",
+    "compile": "tsc",
+    "copy-assets": "node scripts/copy-assets.js",
+    "clean": "rm -rf dist",
+    "watch": "tsc --watch",
+    "package": "npm run build && cd dist && zip -r ../github-code-review-assistant.zip ."
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.260",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

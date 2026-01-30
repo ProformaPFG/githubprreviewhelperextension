@@ -2,7 +2,7 @@
  * Utilities for language detection and file handling
  */
 
-import type { Language } from './types';
+import type { Language } from '../types.js';
 
 /**
  * Map of file extensions to language types

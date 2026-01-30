@@ -4,7 +4,7 @@
  * Debugging statements and markers that should be removed from production
  */
 
-import type { Rule } from '../types';
+import type { Rule } from '../types.js';
 
 export const csharpDebugRules: Rule[] = [
   {

@@ -8,7 +8,7 @@
  * - Handling click/hover events
  */
 
-import type { AnalysisResult, FileAnalysisResults } from '../types';
+import type { AnalysisResult, FileAnalysisResults } from '../types.js';
 
 /**
  * Badge element data structure

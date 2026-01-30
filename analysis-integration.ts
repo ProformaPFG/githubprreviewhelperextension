@@ -8,17 +8,17 @@
  * - Formatting results
  */
 
-import { analyze as analyzeCode } from './analyzer';
-import { getAllRules } from './rules';
-import { settingsManager, type ExtensionSettings } from './settings-manager';
-// Types imported implicitly
+import { analyzeCode } from './analyzer.js';
+import { getAllRules } from './rules/index.js';
+import { settingsManager, type ExtensionSettings } from './settings-manager.js';
+import type { FileAnalysisResults, Language } from './types.js';
 
 /**
  * Run analysis with settings applied
  */
 export async function analyzeWithSettings(
   code: string,
-  language: string,
+  language: Language,
   filePath: string = 'unknown'
 ): Promise<FileAnalysisResults> {
   try {
@@ -34,7 +34,7 @@ export async function analyzeWithSettings(
     // Run analysis
     const results = analyzeCode(code, language, enabledRules, filePath);
 
-    return results;
+    return results as FileAnalysisResults;
   } catch (error) {
     console.error('❌ Analysis failed:', error);
 
@@ -99,13 +99,21 @@ async function filterRulesBySettings(
  * Get analysis stats for display
  */
 export function getAnalysisStats(results: FileAnalysisResults) {
+  const stats = results.stats ?? {
+    total: 0,
+    critical: 0,
+    warning: 0,
+    info: 0,
+    byCategory: {},
+    byRuleId: {},
+  };
   return {
-    total: results.stats.total,
-    critical: results.stats.critical,
-    warning: results.stats.warning,
-    info: results.stats.info,
-    byCategory: results.stats.byCategory,
-    enabledRules: results.stats.byRuleId,
+    total: stats.total,
+    critical: stats.critical,
+    warning: stats.warning,
+    info: stats.info,
+    byCategory: stats.byCategory,
+    enabledRules: stats.byRuleId,
   };
 }
 

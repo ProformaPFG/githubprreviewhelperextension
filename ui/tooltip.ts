@@ -9,7 +9,7 @@
  * - Action buttons (Copy, Learn More, Dismiss)
  */
 
-import type { AnalysisResult } from '../types';
+import type { AnalysisResult } from '../types.js';
 
 /**
  * Tooltip class

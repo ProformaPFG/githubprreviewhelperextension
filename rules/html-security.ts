@@ -4,7 +4,7 @@
  * Rules for detecting common HTML security vulnerabilities
  */
 
-import type { Rule } from '../types';
+import type { Rule } from '../types.js';
 
 export const htmlSecurityRules: Rule[] = [
   {

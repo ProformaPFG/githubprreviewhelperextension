@@ -5,7 +5,7 @@
  * Various console methods that should typically be removed from production
  */
 
-import type { Rule } from '../types';
+import type { Rule } from '../types.js';
 
 export const jsDebugExtendedRules: Rule[] = [
   {
