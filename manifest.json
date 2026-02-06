@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "GitHub Code Review Assistant",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Automated code analysis for GitHub PRs. Detects 76 security and quality issues.",
   
   "permissions": [
