@@ -359,7 +359,7 @@ export function showNotification(message: string, type: 'success' | 'error' | 'w
  * Check if we're on a GitHub PR page
  */
 export function isGitHubPRPage(): boolean {
-  return /github\.com\/.*\/pull\/\d+\/files/i.test(window.location.href);
+  return /github\.com\/.*\/pull\/\d+\/(files|changes)/i.test(window.location.href);
 }
 
 /**

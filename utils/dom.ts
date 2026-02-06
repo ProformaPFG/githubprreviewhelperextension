@@ -168,8 +168,8 @@ export function extractAllCodeFromPage(): ExtractedCode[] {
  * Check if we're on a GitHub PR files page
  */
 export function isGitHubPRFilesPage(): boolean {
-  // Check URL pattern: github.com/{owner}/{repo}/pull/{pr}/files
-  const urlPattern = /github\.com\/[^/]+\/[^/]+\/pull\/\d+\/files/;
+  // Check URL pattern: github.com/{owner}/{repo}/pull/{pr}/files or /changes
+  const urlPattern = /github\.com\/[^/]+\/[^/]+\/pull\/\d+\/(files|changes)/;
   return urlPattern.test(window.location.href);
 }
 
@@ -177,6 +177,6 @@ export function isGitHubPRFilesPage(): boolean {
  * Get the PR URL from the current page
  */
 export function getPRUrl(): string {
-  // Remove /files from the URL to get base PR URL
-  return window.location.href.replace(/\/files.*$/, '');
+  // Remove /files or /changes from the URL to get base PR URL
+  return window.location.href.replace(/\/(files|changes).*$/, '');
 }
