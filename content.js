@@ -83,9 +83,13 @@ function setupPageObserver() {
       m.type === 'childList' &&
       Array.from(m.addedNodes).some(node =>
         node instanceof Element && (
+          node.tagName === 'TABLE' ||
           node.classList.contains('diff-table') ||
+          node.classList.contains('js-diff-table') ||
           node.classList.contains('file-header') ||
-          node.hasAttribute('data-path')
+          node.hasAttribute('data-path') ||
+          node.hasAttribute('data-tab-size') ||
+          node.querySelector?.('table[data-tab-size], table.diff-table') !== null
         )
       )
     );
