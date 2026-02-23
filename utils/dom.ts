@@ -15,20 +15,48 @@ const DIFF_TABLE_SELECTORS = [
 ].join(', ');
 
 /**
- * Find the file path for a diff table by walking up the DOM
+ * Extract a file path from arbitrary text (looks for known extension patterns)
+ */
+function extractPathFromText(text: string): string | null {
+  // Match text that looks like a file path ending in a known extension
+  const match = text.trim().match(/([^\s"'<>]+\.(html?|tsx?|jsx?|css|s[ac]ss|less|cs))/i);
+  return match ? match[1] : null;
+}
+
+/**
+ * Find the file path for a diff table — handles GitHub's React UI and legacy DOM
  */
 function findFilePathForTable(table: Element): string | null {
-  let el: Element | null = table;
+  // Strategy 1: GitHub's new React PR UI uses role="region" with aria-labelledby
+  // pointing to a heading element that contains the filename
+  const regionEl = table.closest('[role="region"][aria-labelledby]');
+  if (regionEl) {
+    const labelId = regionEl.getAttribute('aria-labelledby');
+    if (labelId) {
+      const heading = document.getElementById(labelId);
+      if (heading) {
+        // Try aria-label first (most explicit)
+        const ariaLabel = heading.getAttribute('aria-label');
+        if (ariaLabel) {
+          const p = extractPathFromText(ariaLabel);
+          if (p) return p;
+        }
+        // Try text content (may include icon text — extractPathFromText filters noise)
+        const p = extractPathFromText(heading.textContent || '');
+        if (p) return p;
+      }
+    }
+  }
 
+  // Strategy 2: Legacy GitHub — data-path on ancestor or nearby header
+  let el: Element | null = table;
   for (let i = 0; i < 15; i++) {
     el = el?.parentElement || null;
     if (!el || el === document.body) break;
 
-    // Direct attribute on container (some GitHub versions put data-path on the file div)
     const direct = el.getAttribute('data-path');
     if (direct) return direct;
 
-    // Header child: look in direct children and grandchildren for data-path
     const header = el.querySelector(':scope > [data-path], :scope > * > [data-path]');
     if (header) return header.getAttribute('data-path');
   }
