@@ -4,12 +4,12 @@
  * Orchestrates all UI components working together
  */
 
-import type { FileAnalysisResults } from '../types';
-import { inlineAnnotator } from './inline-annotator';
-import { summaryPanel } from './summary-panel';
-import { tooltipManager } from './tooltip';
-import { initKeyboardNavigation, destroyKeyboardNavigation } from './keyboard-handler';
-import { initQuickComments, destroyQuickComments } from './quick-comments';
+import type { FileAnalysisResults } from '../types.js';
+import { inlineAnnotator } from './inline-annotator.js';
+import { summaryPanel } from './summary-panel.js';
+import { tooltipManager } from './tooltip.js';
+import { initKeyboardNavigation, destroyKeyboardNavigation } from './keyboard-handler.js';
+import { initQuickComments, destroyQuickComments } from './quick-comments.js';
 
 /**
  * UI System - Manages all UI components

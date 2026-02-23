@@ -240,20 +240,19 @@ export class SummaryPanel {
       info: 'ℹ️',
     };
 
-    item.innerHTML = `
-      <div class="cra-panel__issue-line">
-        ${icons[result.severity]} Line ${result.lineNumber}: ${result.ruleName}
-      </div>
-      <div class="cra-panel__issue-rule">
-        ${result.ruleId} - ${result.message}
-      </div>
-    `;
+    const lineDiv = document.createElement('div');
+    lineDiv.className = 'cra-panel__issue-line';
+    lineDiv.textContent = `${icons[result.severity] || '◆'} Line ${result.lineNumber}: ${result.ruleName}`;
+
+    const ruleDiv = document.createElement('div');
+    ruleDiv.className = 'cra-panel__issue-rule';
+    ruleDiv.textContent = `${result.ruleId} - ${result.message}`;
+
+    item.appendChild(lineDiv);
+    item.appendChild(ruleDiv);
 
     item.onclick = () => {
-      // Highlight line in diff
       inlineAnnotator.highlightLine(result.lineNumber);
-
-      // Call callback if provided
       if (this.onIssueClick) {
         this.onIssueClick(result);
       }

@@ -243,6 +243,9 @@ export class SettingsManager {
    * Add GitHub Enterprise domain
    */
   async addEnterpriseDomain(domain: string): Promise<void> {
+    if (!/^[a-z0-9][a-z0-9\-.]+\.[a-z]{2,}$/i.test(domain)) {
+      throw new Error(`Invalid domain format: ${domain}`);
+    }
     const domains = this.cache?.githubEnterpriseDomains || [];
     if (!domains.includes(domain)) {
       domains.push(domain);
@@ -302,7 +305,14 @@ export class SettingsManager {
     }
 
     if (Array.isArray(settings.customRules)) {
-      validated.customRules = settings.customRules;
+      // Filter out custom rules with potentially dangerous ReDoS patterns
+      validated.customRules = settings.customRules.filter((rule: any) => {
+        if (typeof rule.pattern === 'string' && this.hasReDoSPattern(rule.pattern)) {
+          console.warn(`[CRA] Skipping custom rule with potentially unsafe pattern: ${rule.id}`);
+          return false;
+        }
+        return true;
+      });
     }
 
     if (Array.isArray(settings.githubEnterpriseDomains)) {
@@ -352,6 +362,15 @@ export class SettingsManager {
     }
 
     return validated;
+  }
+
+  /**
+   * Detect potentially dangerous ReDoS patterns (nested quantifiers)
+   */
+  private hasReDoSPattern(pattern: string): boolean {
+    // Detect nested quantifiers like (x+)+ or (x*)* or (x|x)+
+    return /\([^)]*[+*][^)]*\)[+*?]/.test(pattern) ||
+      /\([^)]*\|[^)]*\)[+*]/.test(pattern);
   }
 
   /**

@@ -60,6 +60,15 @@ const DEFAULT_TEMPLATES: CommentTemplate[] = [
   }
 ];
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 let templates: CommentTemplate[] = [...DEFAULT_TEMPLATES];
 let paletteVisible = false;
 let paletteElement: HTMLElement | null = null;
@@ -143,10 +152,10 @@ function showPalette(): void {
       </div>
       <ul class="cra-palette-list">
         ${templates.map(t => `
-          <li data-id="${t.id}" data-shortcut="${t.shortcut}">
-            <kbd>${t.shortcut}</kbd>
-            <span class="cra-palette-label">${t.label}</span>
-            <span class="cra-palette-preview">${t.text.substring(0, 50)}${t.text.length > 50 ? '...' : ''}</span>
+          <li data-id="${escapeHtml(t.id)}" data-shortcut="${escapeHtml(t.shortcut)}">
+            <kbd>${escapeHtml(t.shortcut)}</kbd>
+            <span class="cra-palette-label">${escapeHtml(t.label)}</span>
+            <span class="cra-palette-preview">${escapeHtml(t.text.substring(0, 50))}${t.text.length > 50 ? '...' : ''}</span>
           </li>
         `).join('')}
       </ul>

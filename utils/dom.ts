@@ -2,8 +2,8 @@
  * DOM utilities for content script
  */
 
-import type { CodeLine, ExtractedCode } from '../types';
-import { detectLanguage, isSupportedLanguage } from './language';
+import type { CodeLine, ExtractedCode } from '../types.js';
+import { detectLanguage, isSupportedLanguage } from './language.js';
 
 /**
  * Extract file path from the GitHub diff header

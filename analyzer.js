@@ -55,16 +55,21 @@ function executeRule(code, rule, filePath) {
     if (!rule.enabled) {
       return results;
     }
-    
-    const flags = rule.patternFlags || 'gi';
-    const regex = new RegExp(rule.pattern, flags);
+
+    // Cache compiled regex on rule object to avoid recompilation per call
+    if (!rule._compiledRegex) {
+      const flags = rule.patternFlags || 'gi';
+      rule._compiledRegex = new RegExp(rule.pattern, flags);
+    }
+    const regex = rule._compiledRegex;
+    regex.lastIndex = 0; // Reset state for fresh exec loop
     let match;
-    
+
     while ((match = regex.exec(code)) !== null) {
       const lineNumber = calculateLineNumber(code, match.index);
-      const columnNumber = getColumnNumber(code, match.index);
-      const matchedText = extractMatchedText(code, match);
-      
+      const column = getColumnNumber(code, match.index);
+      const code_match = extractMatchedText(code, match);
+
       results.push({
         ruleId: rule.id,
         ruleName: rule.name,
@@ -73,8 +78,8 @@ function executeRule(code, rule, filePath) {
         severity: rule.severity,
         category: rule.category,
         lineNumber: lineNumber,
-        columnNumber: columnNumber,
-        matchedText: matchedText,
+        column: column,
+        code: code_match,
       });
     }
   } catch (error) {
