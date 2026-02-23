@@ -300,7 +300,16 @@
   border-radius: 4px;
   font-size: 11px;
   background-color: white;
+  color: #212529;
   cursor: pointer;
+  width: auto;
+  max-width: 140px;
+  height: auto;
+  -webkit-appearance: auto;
+  appearance: auto;
+  box-sizing: border-box;
+  line-height: normal;
+  display: inline-block;
 }
 
 .cra-panel__list {
@@ -458,6 +467,11 @@
     --cra-color-border: #30363D;
     --cra-color-text-primary: #C9D1D9;
     --cra-color-text-secondary: #8B949E;
+  }
+
+  .cra-panel__filter-select {
+    background-color: #161B22;
+    color: #C9D1D9;
   }
 }
 
