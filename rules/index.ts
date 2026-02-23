@@ -15,6 +15,9 @@ import { getJavaScriptDebugExtendedRules } from './javascript-debug-extended';
 import { getCSharpSecurityRules } from './csharp-security';
 import { getCSharpDebugRules } from './csharp-debug';
 import { getCSharpQualityRules } from './csharp-quality';
+import { getJavaScriptQualityRules } from './javascript-quality';
+import { getTypeScriptQualityRules } from './typescript-quality';
+import { getHTMLAccessibilityRules } from './html-accessibility';
 import { getAWSSecretRules } from './secrets-aws';
 import { getTokenSecretRules } from './secrets-tokens';
 import { getDatabaseSecretRules } from './secrets-database';
@@ -36,6 +39,9 @@ export function getAllRules(): Rule[] {
     ...getCSharpSecurityRules(),
     ...getCSharpDebugRules(),
     ...getCSharpQualityRules(),
+    ...getJavaScriptQualityRules(),
+    ...getTypeScriptQualityRules(),
+    ...getHTMLAccessibilityRules(),
     ...getAWSSecretRules(),
     ...getTokenSecretRules(),
     ...getDatabaseSecretRules(),

@@ -155,6 +155,7 @@ export class SummaryPanel {
       <option value="all">All Categories</option>
       <option value="security">Security</option>
       <option value="debug">Debug</option>
+      <option value="quality">Quality</option>
     `;
     categorySelect.onchange = (e) => {
       this.filterCategory = (e.target as HTMLSelectElement).value;
