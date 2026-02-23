@@ -40,6 +40,18 @@
     }
   ],
   
+  "web_accessible_resources": [
+    {
+      "resources": ["ui/ui-styles.css", "ui-styles.css"],
+      "matches": [
+        "https://github.com/*/*/pull/*/files*",
+        "https://github.com/*/*/pull/*/changes*",
+        "https://*.github.com/*/*/pull/*/files*",
+        "https://*.github.com/*/*/pull/*/changes*"
+      ]
+    }
+  ],
+
   "icons": {
     "16": "icons/icon-16.png",
     "48": "icons/icon-48.png",
