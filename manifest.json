@@ -36,8 +36,7 @@
       ],
       "js": ["content.js"],
       "css": ["ui-styles.css"],
-      "run_at": "document_end",
-      "type": "module"
+      "run_at": "document_end"
     }
   ],
   

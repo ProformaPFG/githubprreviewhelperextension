@@ -144,14 +144,11 @@ function analyzeCode(code, language, rules, filePath) {
   };
 }
 
-// Export functions
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    analyzeCode,
-    executeRule,
-    calculateLineNumber,
-    extractMatchedText,
-    getColumnNumber,
-    deduplicateResults,
-  };
-}
+export {
+  analyzeCode,
+  executeRule,
+  calculateLineNumber,
+  extractMatchedText,
+  getColumnNumber,
+  deduplicateResults,
+};
