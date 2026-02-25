@@ -19,7 +19,7 @@ const DIFF_TABLE_SELECTORS = [
  */
 function extractPathFromText(text: string): string | null {
   // Match text that looks like a file path ending in a known extension
-  const match = text.trim().match(/([^\s"'<>]+\.(html?|tsx?|jsx?|css|s[ac]ss|less|cs))/i);
+  const match = text.trim().match(/([^\s"'<>]+\.(html?|tsx?|jsx?|css|s[ac]ss|less|cs|svelte))/i);
   return match ? match[1] : null;
 }
 
