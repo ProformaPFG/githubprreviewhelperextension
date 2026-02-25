@@ -112,6 +112,7 @@ export function getRulesSummary(): RuleSummary {
       jsx: 0,
       tsx: 0,
       csharp: 0,
+      svelte: 0,
     },
     byCategory: {},
     bySeverity: {},

@@ -2,7 +2,7 @@
  * Type definitions for the GitHub Code Review Assistant extension
  */
 
-export type Language = 'html' | 'css' | 'javascript' | 'typescript' | 'jsx' | 'tsx' | 'csharp';
+export type Language = 'html' | 'css' | 'javascript' | 'typescript' | 'jsx' | 'tsx' | 'csharp' | 'svelte';
 
 export type RuleCategory = 'security' | 'debug' | 'console' | 'quality';
 

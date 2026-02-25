@@ -28,6 +28,9 @@ const EXTENSION_TO_LANGUAGE: Record<string, Language> = {
   
   // C#
   'cs': 'csharp',
+
+  // Svelte
+  'svelte': 'svelte',
 };
 
 /**
@@ -62,7 +65,7 @@ export function getFileDirectory(filePath: string): string {
  */
 export function isSupportedLanguage(language: Language | null): language is Language {
   if (!language) return false;
-  const supported: Language[] = ['html', 'css', 'javascript', 'typescript', 'jsx', 'tsx', 'csharp'];
+  const supported: Language[] = ['html', 'css', 'javascript', 'typescript', 'jsx', 'tsx', 'csharp', 'svelte'];
   return supported.includes(language);
 }
 
