@@ -121,6 +121,25 @@ export const jsQualityRules: Rule[] = [
       good: 'catch (err) { throw new Error("Failed to load user", { cause: err }); }',
     },
   },
+
+  {
+    id: 'JS-QUAL-007',
+    name: 'var Declaration',
+    description: 'var has function scope and hoisting behavior that causes subtle bugs',
+    category: 'quality',
+    severity: 'info',
+    languages: ['javascript', 'typescript', 'jsx', 'tsx', 'svelte'],
+    pattern: '\\bvar\\s+\\w+',
+    patternFlags: 'gi',
+    message: 'var declaration detected. Use const or let instead to avoid hoisting surprises and unintended re-declaration.',
+    remediation:
+      'Replace var with const if the binding is never reassigned, or let if it is. This prevents accidental hoisting and re-declaration.',
+    enabled: true,
+    examples: {
+      bad: 'var count = 0;\nfor (var i = 0; i < items.length; i++) { }',
+      good: 'const count = 0;\nfor (let i = 0; i < items.length; i++) { }',
+    },
+  },
 ];
 
 /**
