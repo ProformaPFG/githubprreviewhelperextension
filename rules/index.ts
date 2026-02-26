@@ -23,6 +23,10 @@ import { getTokenSecretRules } from './secrets-tokens';
 import { getDatabaseSecretRules } from './secrets-database';
 import { getPrivateKeySecretRules } from './secrets-keys';
 import { getGenericSecretRules } from './secrets-generic';
+import { getJavaScriptFunctionalityRules } from './javascript-functionality';
+import { getJavaScriptPerformanceRules } from './javascript-performance';
+import { getTestingRules } from './testing';
+import { getDocumentationRules } from './documentation';
 
 /**
  * Get all available rules
@@ -47,6 +51,10 @@ export function getAllRules(): Rule[] {
     ...getDatabaseSecretRules(),
     ...getPrivateKeySecretRules(),
     ...getGenericSecretRules(),
+    ...getJavaScriptFunctionalityRules(),
+    ...getJavaScriptPerformanceRules(),
+    ...getTestingRules(),
+    ...getDocumentationRules(),
   ];
 }
 
