@@ -1,5 +1,5 @@
 /**
- * JavaScript/TypeScript Code Quality Rules (6 rules)
+ * JavaScript/TypeScript Code Quality Rules (7 rules)
  *
  * Common code quality issues and anti-patterns in JS/TS that cause
  * bugs or indicate incomplete/problematic work.

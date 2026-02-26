@@ -54,7 +54,7 @@ export const jsFunctionalityRules: Rule[] = [
     category: 'functionality',
     severity: 'warning',
     languages: ['javascript', 'typescript', 'jsx', 'tsx', 'svelte'],
-    pattern: '\\.catch\\s*\\(\\s*\\(\\s*\\)\\s*=>\\s*\\{\\s*\\}\\s*\\)',
+    pattern: '\\.catch\\s*\\(\\s*(?:\\(\\s*\\)|\\w+)\\s*=>\\s*\\{\\s*\\}\\s*\\)',
     patternFlags: 'gi',
     message: 'Empty .catch() handler detected. Promise rejections are being silently swallowed.',
     remediation:
