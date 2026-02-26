@@ -4,7 +4,7 @@
 
 export type Language = 'html' | 'css' | 'javascript' | 'typescript' | 'jsx' | 'tsx' | 'csharp' | 'svelte';
 
-export type RuleCategory = 'security' | 'debug' | 'console' | 'quality';
+export type RuleCategory = 'security' | 'debug' | 'console' | 'quality' | 'performance' | 'functionality' | 'testing' | 'documentation';
 
 export type Severity = 'critical' | 'warning' | 'info';
 
