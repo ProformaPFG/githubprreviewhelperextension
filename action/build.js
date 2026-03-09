@@ -1,6 +1,9 @@
 /**
  * Bundles action/index.js + all imported modules (analyzer, rules, @actions/*)
- * into a single CJS file at action/dist/index.js.
+ * into a single CJS file at action/dist/index.cjs.
+ *
+ * Using .cjs extension guarantees Node.js treats the output as CommonJS
+ * regardless of the root package.json "type": "module" setting.
  *
  * GitHub Actions requires a single file entrypoint; bundling avoids needing
  * node_modules present at runtime.
@@ -9,7 +12,7 @@
  */
 
 import * as esbuild from 'esbuild';
-import { mkdir, writeFile } from 'fs/promises';
+import { mkdir } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 
@@ -18,13 +21,10 @@ const outdir = resolve(__dirname, 'dist');
 
 await mkdir(outdir, { recursive: true });
 
-// Override "type": "module" from root package.json so Node treats the CJS bundle correctly.
-await writeFile(resolve(outdir, 'package.json'), JSON.stringify({ type: 'commonjs' }, null, 2) + '\n');
-
 const result = await esbuild.build({
   entryPoints: [resolve(__dirname, 'index.js')],
   bundle: true,
-  outfile: resolve(outdir, 'index.js'),
+  outfile: resolve(outdir, 'index.cjs'),
   platform: 'node',
   target: 'node20',
   format: 'cjs',       // GitHub Actions runner expects CommonJS
@@ -38,4 +38,4 @@ if (result.errors.length > 0) {
   process.exit(1);
 }
 
-console.log('✅  Action bundle written to action/dist/index.js');
+console.log('✅  Action bundle written to action/dist/index.cjs');
