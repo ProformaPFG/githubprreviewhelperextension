@@ -145,6 +145,32 @@ function buildInlineCommentBody(issue) {
   ].join('\n');
 }
 
+// ------- inline comment cleanup --------------------------------------------
+
+/**
+ * Delete all existing inline review comments posted by this action
+ * (identified by INLINE_MARKER in body) to prevent duplicates on re-runs.
+ *
+ * @param {import('@octokit/rest').Octokit} octokit
+ * @param {string} owner
+ * @param {string} repo
+ * @param {number} prNumber
+ */
+async function cleanupInlineComments(octokit, owner, repo, prNumber) {
+  const existing = await octokit.paginate(octokit.rest.pulls.listReviewComments, {
+    owner, repo, pull_number: prNumber,
+  });
+
+  const stale = existing.filter(c => c.body?.includes(INLINE_MARKER));
+  core.info(`Deleting ${stale.length} stale inline comment(s)…`);
+
+  await Promise.all(
+    stale.map(c =>
+      octokit.rest.pulls.deleteReviewComment({ owner, repo, comment_id: c.id }),
+    ),
+  );
+}
+
 // ------- label management --------------------------------------------------
 
 async function ensureLabelExists(octokit, owner, repo, labelName) {
