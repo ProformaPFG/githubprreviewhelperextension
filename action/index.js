@@ -115,6 +115,34 @@ function parsePatchLines(patch) {
   return visible;
 }
 
+// ------- inline comment formatting ----------------------------------------
+
+const INLINE_MARKER = '<!-- cra-inline -->';
+
+/**
+ * Build the markdown body for a single inline review comment.
+ *
+ * Format:
+ *   <!-- cra-inline -->
+ *   🔴 **Critical** &nbsp;·&nbsp; `JS-SEC-001`
+ *
+ *   **eval() function call detected.** — Avoid eval() entirely…
+ *
+ * @param {{ ruleId: string, severity: string, message: string, remediation?: string }} issue
+ * @returns {string}
+ */
+function buildInlineCommentBody(issue) {
+  const icon = SEVERITY_ICON[issue.severity] ?? '';
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  const remediation = issue.remediation ? ` — ${issue.remediation}` : '';
+  return [
+    INLINE_MARKER,
+    `${icon} **${cap(issue.severity)}** &nbsp;·&nbsp; \`${issue.ruleId}\``,
+    '',
+    `**${issue.message}**${remediation}`,
+  ].join('\n');
+}
+
 // ------- label management --------------------------------------------------
 
 async function ensureLabelExists(octokit, owner, repo, labelName) {
