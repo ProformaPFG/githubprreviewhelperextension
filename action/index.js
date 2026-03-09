@@ -210,14 +210,18 @@ async function postInlineReview(octokit, owner, repo, prNumber, commitSha, fileR
 
   core.info(`Posting ${comments.length} inline comment(s) via PR review…`);
 
-  await octokit.rest.pulls.createReview({
-    owner,
-    repo,
-    pull_number: prNumber,
-    commit_id: commitSha,
-    event: 'COMMENT',
-    comments,
-  });
+  try {
+    await octokit.rest.pulls.createReview({
+      owner,
+      repo,
+      pull_number: prNumber,
+      commit_id: commitSha,
+      event: 'COMMENT',
+      comments,
+    });
+  } catch (err) {
+    core.warning(`Could not post inline review comments: ${err.message}`);
+  }
 }
 
 // ------- label management --------------------------------------------------
