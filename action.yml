@@ -1,0 +1,35 @@
+name: 'GitHub Code Review Assistant'
+description: 'Static analysis for PRs — detects security issues, debug code, and quality problems across JS/TS/HTML/CSS/C#'
+author: 'github-code-review-assistant'
+
+branding:
+  icon: 'search'
+  color: 'blue'
+
+inputs:
+  github-token:
+    description: 'GitHub token used to read PR files and post comments (defaults to GITHUB_TOKEN)'
+    required: false
+    default: ${{ github.token }}
+
+  fail-on-critical:
+    description: 'Fail the workflow if any critical-severity issues are found'
+    required: false
+    default: 'false'
+
+  severity-threshold:
+    description: 'Minimum severity level to report. One of: info | warning | critical'
+    required: false
+    default: 'info'
+
+outputs:
+  total-issues:
+    description: 'Total number of issues found across all files'
+  critical-issues:
+    description: 'Number of critical-severity issues found'
+  warning-issues:
+    description: 'Number of warning-severity issues found'
+
+runs:
+  using: 'node20'
+  main: 'action/dist/index.js'

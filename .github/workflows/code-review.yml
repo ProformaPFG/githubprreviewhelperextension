@@ -1,0 +1,40 @@
+name: Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  analyze:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read        # checkout + fetch file content
+      pull-requests: write  # post/update PR comment
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build extension rules (TypeScript → JS)
+        run: npm run build
+
+      - name: Bundle action
+        run: npm run build:action
+
+      - name: Run Code Review Assistant
+        uses: ./
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          fail-on-critical: 'false'
+          severity-threshold: 'info'

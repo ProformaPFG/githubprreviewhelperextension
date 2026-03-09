@@ -2,9 +2,12 @@
 node_modules/
 
 # Build output
-dist/
+/dist/
 build/
 *.zip
+
+# Keep the bundled action so consumers don't need a build step
+!action/dist/
 
 # IDE
 .idea/

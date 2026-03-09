@@ -1,0 +1,199 @@
+/**
+ * GitHub Action entry point for Code Review Assistant
+ *
+ * Fetches PR files via GitHub API, runs the extension's analysis rules,
+ * and posts a formatted comment summarising all issues found.
+ */
+
+import * as core from '@actions/core';
+import * as github from '@actions/github';
+import { analyzeCode } from '../dist/analyzer.js';
+import { getAllRules } from '../dist/rules/index.js';
+
+// ------- language detection (mirrors utils/language.ts) -------------------
+
+const EXTENSION_TO_LANGUAGE = {
+  html: 'html', htm: 'html',
+  css: 'css', scss: 'css', sass: 'css', less: 'css',
+  js: 'javascript', mjs: 'javascript', cjs: 'javascript',
+  ts: 'typescript', tsx: 'tsx', jsx: 'jsx',
+  cs: 'csharp',
+  svelte: 'svelte',
+};
+
+function detectLanguage(filePath) {
+  const m = filePath.match(/\.([^.]+)$/);
+  return m ? (EXTENSION_TO_LANGUAGE[m[1].toLowerCase()] ?? null) : null;
+}
+
+// ------- comment formatting ------------------------------------------------
+
+const SEVERITY_ICON = { critical: '🔴', warning: '⚠️', info: 'ℹ️' };
+const COMMENT_MARKER = '<!-- code-review-assistant-report -->';
+
+function buildComment(fileResults, summary) {
+  const lines = [COMMENT_MARKER, '## 🔍 Code Review Assistant\n'];
+
+  if (summary.total === 0) {
+    lines.push('✅ **No issues found** — great work!');
+    return lines.join('\n');
+  }
+
+  lines.push(
+    `| Severity | Count |`,
+    `|----------|------:|`,
+    `| 🔴 Critical | ${summary.critical} |`,
+    `| ⚠️  Warning  | ${summary.warning} |`,
+    `| ℹ️  Info     | ${summary.info} |`,
+    `| **Total**   | **${summary.total}** |`,
+    '',
+  );
+
+  for (const file of fileResults) {
+    if (file.results.length === 0) continue;
+    lines.push(
+      `<details>`,
+      `<summary><strong>${file.filePath}</strong> &nbsp;—&nbsp; ${file.results.length} issue(s)</summary>`,
+      '',
+      '| Line | Severity | Rule | Message |',
+      '|-----:|----------|------|---------|',
+    );
+    for (const issue of file.results) {
+      const icon = SEVERITY_ICON[issue.severity] ?? '';
+      const msg = issue.message.replace(/\|/g, '\\|');
+      lines.push(
+        `| ${issue.lineNumber} | ${icon} ${issue.severity} | \`${issue.ruleId}\` | ${msg} |`,
+      );
+    }
+    lines.push('', '</details>', '');
+  }
+
+  lines.push('---', '_Powered by [GitHub Code Review Assistant](https://github.com/marketplace)_');
+  return lines.join('\n');
+}
+
+// ------- severity filtering ------------------------------------------------
+
+const SEVERITY_RANK = { info: 0, warning: 1, critical: 2 };
+
+function meetsThreshold(severity, threshold) {
+  return (SEVERITY_RANK[severity] ?? 0) >= (SEVERITY_RANK[threshold] ?? 0);
+}
+
+// ------- main action -------------------------------------------------------
+
+async function run() {
+  try {
+    const token = core.getInput('github-token', { required: true });
+    const failOnCritical = core.getInput('fail-on-critical') === 'true';
+    const severityThreshold = core.getInput('severity-threshold') || 'info';
+
+    const octokit = github.getOctokit(token);
+    const ctx = github.context;
+
+    if (!ctx.payload.pull_request) {
+      core.info('Not a pull request — skipping analysis.');
+      return;
+    }
+
+    const pr = ctx.payload.pull_request;
+    const { owner, repo } = ctx.repo;
+    const prNumber = pr.number;
+
+    core.info(`Analyzing PR #${prNumber} (${owner}/${repo})…`);
+
+    // Fetch changed files (GitHub API pages at 100 per call)
+    const changedFiles = await octokit.paginate(octokit.rest.pulls.listFiles, {
+      owner, repo, pull_number: prNumber, per_page: 100,
+    });
+
+    const allRules = getAllRules();
+    const allFileResults = [];
+    let criticalCount = 0, warningCount = 0, infoCount = 0;
+
+    for (const file of changedFiles) {
+      if (file.status === 'removed') continue;
+
+      const language = detectLanguage(file.filename);
+      if (!language) {
+        core.debug(`Skipping ${file.filename} — unsupported extension`);
+        continue;
+      }
+
+      core.info(`  Analyzing ${file.filename} (${language})`);
+
+      let code;
+      try {
+        const { data } = await octokit.rest.repos.getContent({
+          owner, repo, path: file.filename, ref: pr.head.sha,
+        });
+        if (Array.isArray(data) || data.type !== 'file') continue;
+        code = Buffer.from(data.content, 'base64').toString('utf-8');
+      } catch (err) {
+        core.warning(`Could not fetch ${file.filename}: ${err.message}`);
+        continue;
+      }
+
+      const rawResults = analyzeCode(code, language, allRules, file.filename);
+
+      // Apply severity threshold filter
+      rawResults.results = rawResults.results.filter(r =>
+        meetsThreshold(r.severity, severityThreshold),
+      );
+
+      if (rawResults.results.length === 0) continue;
+
+      allFileResults.push(rawResults);
+      for (const r of rawResults.results) {
+        if (r.severity === 'critical') criticalCount++;
+        else if (r.severity === 'warning') warningCount++;
+        else infoCount++;
+      }
+    }
+
+    const summary = {
+      total: criticalCount + warningCount + infoCount,
+      critical: criticalCount,
+      warning: warningCount,
+      info: infoCount,
+    };
+
+    core.info(`Analysis complete: ${summary.total} issue(s) found (${criticalCount} critical, ${warningCount} warning, ${infoCount} info)`);
+
+    // Post or update PR comment
+    const commentBody = buildComment(allFileResults, summary);
+
+    const existingComments = await octokit.paginate(octokit.rest.issues.listComments, {
+      owner, repo, issue_number: prNumber,
+    });
+
+    const botComment = existingComments.find(c =>
+      c.user?.type === 'Bot' && c.body?.includes(COMMENT_MARKER),
+    );
+
+    if (botComment) {
+      await octokit.rest.issues.updateComment({
+        owner, repo, comment_id: botComment.id, body: commentBody,
+      });
+      core.info('Updated existing review comment.');
+    } else {
+      await octokit.rest.issues.createComment({
+        owner, repo, issue_number: prNumber, body: commentBody,
+      });
+      core.info('Posted new review comment.');
+    }
+
+    // Action outputs
+    core.setOutput('total-issues', String(summary.total));
+    core.setOutput('critical-issues', String(summary.critical));
+    core.setOutput('warning-issues', String(summary.warning));
+
+    if (failOnCritical && criticalCount > 0) {
+      core.setFailed(`Found ${criticalCount} critical issue(s) — please review before merging.`);
+    }
+  } catch (error) {
+    core.setFailed(`Action failed: ${error.message}`);
+  }
+}
+
+run();
