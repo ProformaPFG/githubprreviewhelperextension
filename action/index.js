@@ -133,13 +133,15 @@ const INLINE_MARKER = '<!-- cra-inline -->';
  */
 function buildInlineCommentBody(issue) {
   const icon = SEVERITY_ICON[issue.severity] ?? '';
-  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
   const remediation = issue.remediation ? ` — ${issue.remediation}` : '';
+  const ruleId = issue.ruleId ?? 'unknown';
+  const message = issue.message || '(no message)';
   return [
     INLINE_MARKER,
-    `${icon} **${cap(issue.severity)}** &nbsp;·&nbsp; \`${issue.ruleId}\``,
+    `${icon} **${cap(issue.severity)}** &nbsp;·&nbsp; \`${ruleId}\``,
     '',
-    `**${issue.message}**${remediation}`,
+    `**${message}**${remediation}`,
   ].join('\n');
 }
 
