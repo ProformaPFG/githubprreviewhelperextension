@@ -171,6 +171,55 @@ async function cleanupInlineComments(octokit, owner, repo, prNumber) {
   );
 }
 
+// ------- inline review posting ---------------------------------------------
+
+/**
+ * Collect inline comments across all analyzed files and post them as a
+ * single pull request review.  Issues whose line number falls outside the
+ * diff are silently skipped here (they still appear in the summary comment).
+ *
+ * @param {import('@octokit/rest').Octokit} octokit
+ * @param {string} owner
+ * @param {string} repo
+ * @param {number} prNumber
+ * @param {string} commitSha  pr.head.sha
+ * @param {Array<{ filePath: string, patch: string|undefined, results: Array }>} fileResults
+ */
+async function postInlineReview(octokit, owner, repo, prNumber, commitSha, fileResults) {
+  const comments = [];
+
+  for (const file of fileResults) {
+    const diffLines = parsePatchLines(file.patch);
+
+    for (const issue of file.results) {
+      if (!diffLines.has(issue.lineNumber)) continue;
+
+      comments.push({
+        path: file.filePath,
+        line: issue.lineNumber,
+        side: 'RIGHT',
+        body: buildInlineCommentBody(issue),
+      });
+    }
+  }
+
+  if (comments.length === 0) {
+    core.info('No inline comments to post (no issues fall within diff lines).');
+    return;
+  }
+
+  core.info(`Posting ${comments.length} inline comment(s) via PR review…`);
+
+  await octokit.rest.pulls.createReview({
+    owner,
+    repo,
+    pull_number: prNumber,
+    commit_id: commitSha,
+    event: 'COMMENT',
+    comments,
+  });
+}
+
 // ------- label management --------------------------------------------------
 
 async function ensureLabelExists(octokit, owner, repo, labelName) {
