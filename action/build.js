@@ -9,7 +9,7 @@
  */
 
 import * as esbuild from 'esbuild';
-import { mkdir } from 'fs/promises';
+import { mkdir, writeFile } from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 
@@ -17,6 +17,9 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const outdir = resolve(__dirname, 'dist');
 
 await mkdir(outdir, { recursive: true });
+
+// Override "type": "module" from root package.json so Node treats the CJS bundle correctly.
+await writeFile(resolve(outdir, 'package.json'), JSON.stringify({ type: 'commonjs' }, null, 2) + '\n');
 
 const result = await esbuild.build({
   entryPoints: [resolve(__dirname, 'index.js')],
