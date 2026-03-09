@@ -345,7 +345,11 @@ async function run() {
     core.info(`Analysis complete: ${summary.total} issue(s) found (${criticalCount} critical, ${warningCount} warning, ${infoCount} info)`);
 
     // Post inline review comments on diff lines
-    await cleanupInlineComments(octokit, owner, repo, prNumber);
+    try {
+      await cleanupInlineComments(octokit, owner, repo, prNumber);
+    } catch (err) {
+      core.warning(`Could not clean up stale inline comments: ${err.message}`);
+    }
     await postInlineReview(octokit, owner, repo, prNumber, pr.head.sha, allFileResults);
 
     // Post or update PR comment

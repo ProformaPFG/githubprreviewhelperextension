@@ -26715,7 +26715,11 @@ async function run() {
       info: infoCount
     };
     core.info(`Analysis complete: ${summary.total} issue(s) found (${criticalCount} critical, ${warningCount} warning, ${infoCount} info)`);
-    await cleanupInlineComments(octokit, owner, repo, prNumber);
+    try {
+      await cleanupInlineComments(octokit, owner, repo, prNumber);
+    } catch (err) {
+      core.warning(`Could not clean up stale inline comments: ${err.message}`);
+    }
     await postInlineReview(octokit, owner, repo, prNumber, pr.head.sha, allFileResults);
     const commentBody = buildComment(allFileResults, summary);
     const existingComments = await octokit.paginate(octokit.rest.issues.listComments, {
