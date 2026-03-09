@@ -26534,6 +26534,85 @@ var SEVERITY_RANK = { info: 0, warning: 1, critical: 2 };
 function meetsThreshold(severity, threshold) {
   return (SEVERITY_RANK[severity] ?? 0) >= (SEVERITY_RANK[threshold] ?? 0);
 }
+function parsePatchLines(patch) {
+  if (!patch) return /* @__PURE__ */ new Set();
+  const visible = /* @__PURE__ */ new Set();
+  let newLine = 0;
+  for (const line of patch.split("\n")) {
+    if (line.startsWith("@@")) {
+      const m = line.match(/@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
+      if (m) newLine = parseInt(m[1], 10) - 1;
+    } else if (line.startsWith("-")) {
+    } else if (line.startsWith("+")) {
+      newLine++;
+      visible.add(newLine);
+    } else {
+      newLine++;
+      visible.add(newLine);
+    }
+  }
+  return visible;
+}
+var INLINE_MARKER = "<!-- cra-inline -->";
+function buildInlineCommentBody(issue) {
+  const icon = SEVERITY_ICON[issue.severity] ?? "";
+  const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+  const remediation = issue.remediation ? ` \u2014 ${issue.remediation}` : "";
+  const ruleId = issue.ruleId ?? "unknown";
+  const message = issue.message || "(no message)";
+  return [
+    INLINE_MARKER,
+    `${icon} **${cap(issue.severity)}** &nbsp;\xB7&nbsp; \`${ruleId}\``,
+    "",
+    `**${message}**${remediation}`
+  ].join("\n");
+}
+async function cleanupInlineComments(octokit, owner, repo, prNumber) {
+  const existing = await octokit.paginate(octokit.rest.pulls.listReviewComments, {
+    owner,
+    repo,
+    pull_number: prNumber
+  });
+  const stale = existing.filter((c) => c.body?.includes(INLINE_MARKER));
+  core.info(`Deleting ${stale.length} stale inline comment(s)\u2026`);
+  await Promise.all(
+    stale.map(
+      (c) => octokit.rest.pulls.deleteReviewComment({ owner, repo, comment_id: c.id })
+    )
+  );
+}
+async function postInlineReview(octokit, owner, repo, prNumber, commitSha, fileResults) {
+  const comments = [];
+  for (const file of fileResults) {
+    const diffLines = parsePatchLines(file.patch);
+    for (const issue of file.results) {
+      if (!diffLines.has(issue.lineNumber)) continue;
+      comments.push({
+        path: file.filePath,
+        line: issue.lineNumber,
+        side: "RIGHT",
+        body: buildInlineCommentBody(issue)
+      });
+    }
+  }
+  if (comments.length === 0) {
+    core.info("No inline comments to post (no issues fall within diff lines).");
+    return;
+  }
+  core.info(`Posting ${comments.length} inline comment(s) via PR review\u2026`);
+  try {
+    await octokit.rest.pulls.createReview({
+      owner,
+      repo,
+      pull_number: prNumber,
+      commit_id: commitSha,
+      event: "COMMENT",
+      comments
+    });
+  } catch (err) {
+    core.warning(`Could not post inline review comments: ${err.message}`);
+  }
+}
 async function ensureLabelExists(octokit, owner, repo, labelName) {
   try {
     await octokit.rest.issues.getLabel({ owner, repo, name: labelName });
@@ -26621,6 +26700,7 @@ async function run() {
         (r) => meetsThreshold(r.severity, severityThreshold)
       );
       if (rawResults.results.length === 0) continue;
+      rawResults.patch = file.patch;
       allFileResults.push(rawResults);
       for (const r of rawResults.results) {
         if (r.severity === "critical") criticalCount++;
@@ -26635,6 +26715,8 @@ async function run() {
       info: infoCount
     };
     core.info(`Analysis complete: ${summary.total} issue(s) found (${criticalCount} critical, ${warningCount} warning, ${infoCount} info)`);
+    await cleanupInlineComments(octokit, owner, repo, prNumber);
+    await postInlineReview(octokit, owner, repo, prNumber, pr.head.sha, allFileResults);
     const commentBody = buildComment(allFileResults, summary);
     const existingComments = await octokit.paginate(octokit.rest.issues.listComments, {
       owner,
