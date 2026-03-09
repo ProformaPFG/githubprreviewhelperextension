@@ -22,6 +22,11 @@ inputs:
     required: false
     default: 'info'
 
+  label-on-critical:
+    description: 'Label to add to the PR when critical issues are found. Set to empty string to disable. Label will be removed automatically when no critical issues remain.'
+    required: false
+    default: 'needs-review'
+
 outputs:
   total-issues:
     description: 'Total number of issues found across all files'

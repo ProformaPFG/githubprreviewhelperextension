@@ -12,6 +12,7 @@ jobs:
     permissions:
       contents: read        # checkout + fetch file content
       pull-requests: write  # post/update PR comment
+      issues: write         # add/remove labels
 
     steps:
       - name: Checkout
@@ -38,3 +39,4 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           fail-on-critical: 'false'
           severity-threshold: 'info'
+          label-on-critical: 'needs-review'

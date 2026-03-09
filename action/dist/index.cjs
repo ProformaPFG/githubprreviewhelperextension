@@ -26534,11 +26534,47 @@ var SEVERITY_RANK = { info: 0, warning: 1, critical: 2 };
 function meetsThreshold(severity, threshold) {
   return (SEVERITY_RANK[severity] ?? 0) >= (SEVERITY_RANK[threshold] ?? 0);
 }
+async function ensureLabelExists(octokit, owner, repo, labelName) {
+  try {
+    await octokit.rest.issues.getLabel({ owner, repo, name: labelName });
+  } catch (err) {
+    if (err.status === 404) {
+      await octokit.rest.issues.createLabel({
+        owner,
+        repo,
+        name: labelName,
+        color: "e11d48",
+        description: "PR has critical issues that need to be addressed"
+      });
+      core.info(`Created label "${labelName}"`);
+    } else {
+      throw err;
+    }
+  }
+}
+async function syncCriticalLabel(octokit, owner, repo, prNumber, labelName, hasCriticals) {
+  if (!labelName) return;
+  const currentLabels = await octokit.paginate(octokit.rest.issues.listLabelsOnIssue, {
+    owner,
+    repo,
+    issue_number: prNumber
+  });
+  const hasLabel = currentLabels.some((l) => l.name === labelName);
+  if (hasCriticals && !hasLabel) {
+    await ensureLabelExists(octokit, owner, repo, labelName);
+    await octokit.rest.issues.addLabels({ owner, repo, issue_number: prNumber, labels: [labelName] });
+    core.info(`Added label "${labelName}" to PR #${prNumber}`);
+  } else if (!hasCriticals && hasLabel) {
+    await octokit.rest.issues.removeLabel({ owner, repo, issue_number: prNumber, name: labelName });
+    core.info(`Removed label "${labelName}" from PR #${prNumber}`);
+  }
+}
 async function run() {
   try {
     const token = core.getInput("github-token", { required: true });
     const failOnCritical = core.getInput("fail-on-critical") === "true";
     const severityThreshold = core.getInput("severity-threshold") || "info";
+    const labelOnCritical = core.getInput("label-on-critical");
     const octokit = github.getOctokit(token);
     const ctx = github.context;
     if (!ctx.payload.pull_request) {
@@ -26628,6 +26664,7 @@ async function run() {
     core.setOutput("total-issues", String(summary.total));
     core.setOutput("critical-issues", String(summary.critical));
     core.setOutput("warning-issues", String(summary.warning));
+    await syncCriticalLabel(octokit, owner, repo, prNumber, labelOnCritical, criticalCount > 0);
     if (failOnCritical && criticalCount > 0) {
       core.setFailed(`Found ${criticalCount} critical issue(s) \u2014 please review before merging.`);
     }
