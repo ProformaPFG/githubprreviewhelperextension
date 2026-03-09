@@ -324,6 +324,9 @@ async function run() {
 
       if (rawResults.results.length === 0) continue;
 
+      // Store the diff patch so postInlineReview can map issues to diff lines
+      rawResults.patch = file.patch;
+
       allFileResults.push(rawResults);
       for (const r of rawResults.results) {
         if (r.severity === 'critical') criticalCount++;
@@ -340,6 +343,10 @@ async function run() {
     };
 
     core.info(`Analysis complete: ${summary.total} issue(s) found (${criticalCount} critical, ${warningCount} warning, ${infoCount} info)`);
+
+    // Post inline review comments on diff lines
+    await cleanupInlineComments(octokit, owner, repo, prNumber);
+    await postInlineReview(octokit, owner, repo, prNumber, pr.head.sha, allFileResults);
 
     // Post or update PR comment
     const commentBody = buildComment(allFileResults, summary);
