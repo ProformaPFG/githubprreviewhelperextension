@@ -80,7 +80,40 @@ function meetsThreshold(severity, threshold) {
   return (SEVERITY_RANK[severity] ?? 0) >= (SEVERITY_RANK[threshold] ?? 0);
 }
 
-// ------- main action -------------------------------------------------------
+// ------- diff line mapping -------------------------------------------------
+
+/**
+ * Parse a unified diff patch and return the Set of new-file line numbers
+ * that appear in the diff (added lines + context lines).
+ * Only lines in this set can receive inline review comments.
+ *
+ * @param {string|undefined} patch  The `patch` field from pulls.listFiles
+ * @returns {Set<number>}
+ */
+function parsePatchLines(patch) {
+  if (!patch) return new Set();
+  const visible = new Set();
+  let newLine = 0;
+
+  for (const line of patch.split('\n')) {
+    if (line.startsWith('@@')) {
+      // e.g.  @@ -10,7 +12,9 @@
+      const m = line.match(/@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
+      if (m) newLine = parseInt(m[1], 10) - 1;
+    } else if (line.startsWith('-')) {
+      // removed line — no new-file line number, skip
+    } else if (line.startsWith('+')) {
+      newLine++;
+      visible.add(newLine);
+    } else {
+      // context line
+      newLine++;
+      visible.add(newLine);
+    }
+  }
+
+  return visible;
+}
 
 // ------- label management --------------------------------------------------
 
