@@ -172,7 +172,7 @@ export const csharpSecurityRules: Rule[] = [
     message: 'Public controller action detected. Ensure proper authorization is in place.',
     remediation:
       'Add [Authorize] attribute to controller or actions that require authentication. Use [AllowAnonymous] only when intentional.',
-    enabled: true,
+    enabled: false,
     examples: {
       bad: 'public ActionResult GetUser(int id) { return View(userService.GetUser(id)); }',
       good: '[Authorize]\npublic ActionResult GetUser(int id) { return View(userService.GetUser(id)); }',
