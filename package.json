@@ -14,8 +14,8 @@
     "package": "npm run build && cd dist && zip -r ../github-code-review-assistant.zip ."
   },
   "dependencies": {
-    "@actions/core": "^1.10.1",
-    "@actions/github": "^6.0.0"
+    "@actions/core": "^2.0.0",
+    "@actions/github": "^8.0.1"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.260",
