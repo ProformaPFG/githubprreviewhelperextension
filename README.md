@@ -42,7 +42,7 @@ GitHub Code Review Assistant is a Chrome/Edge extension that enhances your GitHu
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/mlaplante/githubprreviewhelperextension.git
+   git clone https://github.com/ProformaPFG/githubprreviewhelperextension.git
    cd githubprreviewhelperextension
    ```
 

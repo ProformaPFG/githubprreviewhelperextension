@@ -9,7 +9,7 @@
     "bundle-content": "node scripts/bundle-content.js",
     "compile": "tsc",
     "copy-assets": "node scripts/copy-assets.js",
-    "clean": "rm -rf dist",
+    "clean": "npx rimraf dist",
     "watch": "tsc --watch",
     "package": "npm run build && cd dist && zip -r ../github-code-review-assistant.zip ."
   },
