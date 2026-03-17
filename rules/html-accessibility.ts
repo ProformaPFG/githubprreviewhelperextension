@@ -72,9 +72,9 @@ export const htmlAccessibilityRules: Rule[] = [
     category: 'quality',
     severity: 'info',
     languages: ['html', 'svelte'],
-    pattern: '<a(?![^>]*\\bhref\\s*=)[^>]*>',
+    pattern: '<a(?![^>]*(\bhref\s*=|\[routerLink\]))[^>]*>',
     patternFlags: 'gi',
-    message: '<a> element without href attribute. This is not keyboard navigable and confuses assistive technology.',
+    message: '<a> element without href attribute that is not an angular router link. This is not keyboard navigable and confuses assistive technology.',
     remediation:
       'Use <button> for clickable actions without navigation. If linking, provide a valid href. Avoid <a> as a generic interactive element.',
     enabled: true,
