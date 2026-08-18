@@ -36,5 +36,5 @@ outputs:
     description: 'Number of warning-severity issues found'
 
 runs:
-  using: 'node20'
+  using: 'node24'
   main: 'action/dist/index.cjs'
