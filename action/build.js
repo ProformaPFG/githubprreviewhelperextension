@@ -26,7 +26,7 @@ const result = await esbuild.build({
   bundle: true,
   outfile: resolve(outdir, 'index.cjs'),
   platform: 'node',
-  target: 'node20',
+  target: 'node24',
   format: 'cjs',       // GitHub Actions runner expects CommonJS
   sourcemap: false,
   minify: false,        // keep readable for debugging action issues
